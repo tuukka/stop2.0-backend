@@ -79,10 +79,8 @@ class DigitransitAPIService:
 
         data = json.loads(self.get_query(query))["data"]["stop"]
 
-        data = json.loads(self.get_query(query))['data']['trip']
-
         if data is None:
-            return json.loads('{ "error":"Invalid trip id" }')
+            return json.loads('{ "error":"Invalid stop id" }')
 
         lines = data["stoptimesForServiceDate"]
 
