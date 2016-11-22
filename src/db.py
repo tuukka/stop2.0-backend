@@ -14,12 +14,17 @@ class Database:
     
     @asyncio.coroutine
     def init_connection(self):
+        if os.getenv('TESTING', 'False') == 'True':
+            port = '9999'
+        else:
+            port = '5432'
+
         result = 1
         loop_end = time.time() + 10
         while time.time() < loop_end:
             try:
                 self.pool = psycopg2.pool.ThreadedConnectionPool(1, 20, host=os.getenv('DBHOST', 'localhost'),
-                                                                 port=os.getenv('DBPORT', '5432'),
+                                                                 port=os.getenv('DBPORT', port),
                                                                  user=os.getenv('DBUSER', 'stop'),
                                                                  database=os.getenv('DBNAME', 'stop'),
                                                                  password=os.getenv('DBPASS', 'stop'))

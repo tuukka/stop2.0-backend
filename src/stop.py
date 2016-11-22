@@ -15,9 +15,15 @@ app = Flask(__name__)
 
 db = db.Database()
 push_notification_service = push_notification_service.PushNotificationService()
-digitransitAPIService = services.DigitransitAPIService(db,
-                                                       push_notification_service,
-                                                       'http://api.digitransit.fi/routing/v1/routers/hsl/index/graphql')
+
+if os.getenv('TESTING', 'False') == 'True':
+    digitransitAPIService = services.DigitransitAPIService(db,
+                                                           push_notification_service,
+                                                           'http://localhost:11111')
+else:
+    digitransitAPIService = services.DigitransitAPIService(db,
+                                                           push_notification_service,
+                                                           'http://api.digitransit.fi/routing/v1/routers/hsl/index/graphql')
 
 
 @app.route('/')
