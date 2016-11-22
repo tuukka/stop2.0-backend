@@ -5,7 +5,7 @@ FAILED=0
 # DigitransitAPIService tests
 
 # returns correct stop
-if ! curl -X GET http://localhost:5000/stops?lat=60.20583\&lon=24.96293 | grep -q '"stop_name": "A.I. Virtasen aukio"'; then
+if ! curl -X GET http://localhost:5000/stops?lat=60.203978\&lon=24.963357 | grep -q '"stop_name": "A.I. Virtasen aukio"'; then
   echo 'Integration test "returns correct stop" failed'
   FAILED=$((FAILED+1))
 fi

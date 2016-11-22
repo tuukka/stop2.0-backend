@@ -14,6 +14,7 @@ venv:
 	virtualenv -p python3 venv
 
 test: export TESTING=True
+	export COMPOSE=True
 test: stamps/requirements-done
 	(docker-compose build && docker-compose up -d && . ./venv/bin/activate && \
 	 PYTHONPATH=src/ coverage run -m --branch --source=src \

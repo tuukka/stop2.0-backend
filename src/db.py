@@ -14,7 +14,8 @@ class Database:
     
     @asyncio.coroutine
     def init_connection(self):
-        if os.getenv('TESTING', 'False') == 'True':
+        # When using docker compose db is in the same container as the app itself and must use its internal port
+        if os.getenv('COMPOSE', 'False') == 'True':
             port = '9999'
         else:
             port = '5432'
