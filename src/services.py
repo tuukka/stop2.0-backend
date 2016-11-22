@@ -79,6 +79,11 @@ class DigitransitAPIService:
 
         data = json.loads(self.get_query(query))["data"]["stop"]
 
+        data = json.loads(self.get_query(query))['data']['trip']
+
+        if data is None:
+            return json.loads('{ "error":"Invalid trip id" }')
+
         lines = data["stoptimesForServiceDate"]
 
         current_time = datetime.datetime.now()
@@ -125,16 +130,16 @@ class DigitransitAPIService:
 
     def make_request(self, trip_id, stop_id, device_id):
         request_id = self.db.store_request(trip_id, stop_id, device_id)
-        
+
         data = self.get_requests(trip_id)
         publish.single(topic="stoprequests/" + trip_id, payload=json.dumps(data), hostname=self.MQTT_host, port=1883)
-        
+
         result = {"request_id": request_id}
         return result
-    
+
     def get_request_info(self, request_id):
         request_data = self.db.get_request_info(request_id)
-        
+
         query = ("{"
                  "  trip(id: \"%s\"){"
                  "      stoptimesForDate(serviceDay: \"%s\"){"
@@ -150,44 +155,48 @@ class DigitransitAPIService:
                  "  }"
                  "}") % (request_data[0], datetime.datetime.now().strftime("%Y%m%d"))
 
-        stop_data = json.loads(self.get_query(query))['data']['trip']['stoptimesForDate']
+        stop_data = json.loads(self.get_query(query))['data']['trip']
+
+        if stop_data is None:
+            return json.loads('{ "error":"Invalid trip id" }')
+
         result = {}
-        for stop in stop_data:
+        for stop in stop_data['stoptimesForDate']:
             if request_data[1] == stop['stop']['gtfsId']:
                 current_time = datetime.datetime.now()
                 real_time = datetime.datetime.fromtimestamp(stop["serviceDay"] + stop["realtimeArrival"])
                 arrival = math.floor((real_time - current_time).total_seconds() / 60.0)
                 result = {'stop_name': stop['stop']['name'], 'stop_code': stop['stop']['code'],
                           'stop_id': stop['stop']['gtfsId'], 'arrives_in': arrival, 'delay': stop['arrivalDelay']}
-        
+
         return result
-        
+
     def cancel_request(self, request_id):
         trip_id = self.db.cancel_request(request_id)
         data = self.get_requests(trip_id)
         publish.single(topic="stoprequests/" + trip_id, payload=json.dumps(data), hostname=self.MQTT_host, port=1883)
-        
+
         return ''
-        
+
     def store_report(self, trip_id, stop_id):
         self.db.store_report(trip_id, stop_id)
-        
+
         return ''
-    
+
     def get_requests(self, trip_id):
         requests = self.db.get_requests(trip_id)
         stop_dict = {}
-        
+
         for stop_id in requests:
             i = stop_dict.get(stop_id[0], 0)
             stop_dict[stop_id[0]] = i + 1
         stop_list = []
-        
+
         for key in stop_dict.keys():
             stop_list.append({"id": key, "passengers": stop_dict[key]})
-            
+
         return {"stop_ids": stop_list}
-    
+
     def get_stops_by_trip_id(self, trip_id):
         query = ("{trip(id: \"%s\") {"
                  " stoptimesForDate(serviceDay: \"%s\") {"
@@ -206,8 +215,13 @@ class DigitransitAPIService:
         current_time = datetime.datetime.now()
         result = {}
         stops = []
-        data = json.loads(self.get_query(query))['data']['trip']['stoptimesForDate']
-        for stop in data:
+
+        data = json.loads(self.get_query(query))['data']['trip']
+
+        if data is None:
+            return json.loads('{ "error":"Invalid trip id" }')
+
+        for stop in data['stoptimesForDate']:
             real_time = datetime.datetime.fromtimestamp(stop["serviceDay"] + stop["realtimeArrival"])
             arrival = math.floor((real_time - current_time).total_seconds() / 60.0)
             stops.append({'stop_name': stop['stop']['name'], 'stop_code': stop['stop']['code'],
@@ -230,17 +244,22 @@ class DigitransitAPIService:
                  "       }"
                  "      }"
                  "}") % (trip_id, datetime.datetime.now().strftime("%Y%m%d"))
-    
+
         current_time = datetime.datetime.now()
         result = {}
         stops = []
-        data = json.loads(self.get_query(query))['data']['trip']['stoptimesForDate']
-        for stop in data:
+
+        data = json.loads(self.get_query(query))['data']['trip']
+
+        if data is None:
+            return json.loads('{ "error":"Invalid trip id" }')
+
+        for stop in data['stoptimesForDate']:
             if stop_id == stop['stop']['gtfsId']:
                 real_time = datetime.datetime.fromtimestamp(stop["serviceDay"] + stop["realtimeArrival"])
                 arrival = math.floor((real_time - current_time).total_seconds() / 60.0)
                 stops.append({'stop_name': stop['stop']['name'], 'stop_code': stop['stop']['code'],
                                   'stop_id': stop['stop']['gtfsId'], 'arrives_in': arrival})
         result["stops"] = stops
-    
+
         return result
