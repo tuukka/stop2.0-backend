@@ -10,7 +10,7 @@ class TestStopRoutes(unittest.TestCase):
 
 
     def test_stops_get(self):
-        response = self.app.get('/stops?lat=1.0&lon=2.0')
+        response = self.app.get('/stops?lat=60.203978&lon=24.963357')
         self.assertEqual(response.status_code, 200)
 
     def test_stopsrequests_post(self):
